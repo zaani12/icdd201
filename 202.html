@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azure - Application de Révision Complète</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .header h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-tab {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .nav-tab:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118,75,162,0.4);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid;
+        }
+        
+        .icon {
+            font-size: 2em;
+        }
+        
+        .card-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            color: #34495e;
+            margin: 15px 0 8px 0;
+            font-size: 1.05em;
+        }
+        
+        .item {
+            padding: 6px 0;
+            padding-left: 15px;
+            position: relative;
+            line-height: 1.6;
+        }
+        
+        .item::before {
+            content: "▸";
+            position: absolute;
+            left: 0;
+            color: #3498db;
+            font-weight: bold;
+        }
+        
+        .highlight {
+            background: linear-gradient(120deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        
+        .qa-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .qa-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .question {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: start;
+            gap: 10px;
+        }
+        
+        .question-number {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+        
+        .answer {
+            color: #34495e;
+            line-height: 1.8;
+            padding-left: 15px;
+            border-left: 3px solid #e0e0e0;
+            margin-top: 10px;
+        }
+        
+        .blue { border-color: #3498db; }
+        .green { border-color: #2ecc71; }
+        .orange { border-color: #e67e22; }
+        .purple { border-color: #9b59b6; }
+        .red { border-color: #e74c3c; }
+        .teal { border-color: #1abc9c; }
+        .pink { border-color: #ff6b9d; }
+        
+        .search-box {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        
+        .category-filter {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>☁️ Azure - Application de Révision Complète</h1>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showSection('resume')">📚 Résumé</button>
+            <button class="nav-tab" onclick="showSection('qa')">❓ Questions & Réponses</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- SECTION RÉSUMÉ -->
+        <div id="resume" class="content-section active">
+            <div class="grid">
+                <!-- Services Calcul -->
+                <div class="card red">
+                    <div class="card-header red">
+                        <span class="icon">⚙️</span>
+                        <span class="card-title">Services Calcul</span>
+                    </div>
+                    <div class="section-title">💻 Types de services</div>
+                    <div class="item"><span class="highlight">VM</span> → Machines virtuelles IaaS</div>
+                    <div class="item"><span class="highlight">Virtual Desktop</span> → Postes distants sécurisés</div>
+                    <div class="item"><span class="highlight">Conteneurs</span> → Docker, AKS (légers et rapides)</div>
+                    <div class="item"><span class="highlight">Functions</span> → Serverless, déclenchée par événements</div>
+                    <div class="item"><span class="highlight">App Service</span> → Web, API, mobile</div>
+                    
+                    <div class="section-title">🔄 VM vs Conteneur</div>
+                    <div class="item"><strong>VM :</strong> Virtualise OS complet</div>
+                    <div class="item"><strong>Conteneur :</strong> Virtualise couches logicielles uniquement</div>
+                    
+                    <div class="section-title">✨ Avantages Conteneurs</div>
+                    <div class="item">Portabilité • Agilité • Évolutivité rapide</div>
+                    
+                    <div class="section-title">💡 Cas d'usage</div>
+                    <div class="item">ML (IA) • Batch • Applications Cloud Native</div>
+                </div>
+
+                <!-- Connectivité Réseau -->
+                <div class="card teal">
+                    <div class="card-header teal">
+                        <span class="icon">🌐</span>
+                        <span class="card-title">Connectivité Réseau</span>
+                    </div>
+                    <div class="item"><span class="highlight">VNet</span> → Réseau virtuel privé</div>
+                    <div class="item"><span class="highlight">Azure DNS</span> → Résolution DNS</div>
+                    <div class="item"><span class="highlight">VPN Gateway</span> → Connexion sécurisée VIA Internet</div>
+                    <div class="item"><span class="highlight">ExpressRoute</span> → Liaison privée SANS Internet</div>
+                    <div class="item"><span class="highlight">Azure Bastion</span> → RDP/SSH sécurisé (PaaS)</div>
+                    <div class="item"><span class="highlight">WAN Virtuel</span> → Connectivité branche optimisée</div>
+                </div>
+
+                <!-- Livraison Applications -->
+                <div class="card pink">
+                    <div class="card-header pink">
+                        <span class="icon">🚀</span>
+                        <span class="card-title">Livraison d'Applications</span>
+                    </div>
+                    <div class="item"><span class="highlight">CDN</span> → Serveurs Edge distribués géographiquement</div>
+                    <div class="item"><span class="highlight">Traffic Manager</span> → Équilibreur de charge DNS</div>
+                    <div class="item"><span class="highlight">Front Door</span> → Équilibrage multi-régions</div>
+                    <div class="item"><span class="highlight">App Gateway</span> → Équilibrage une région</div>
+                    
+                    <div class="section-title">⚡ Différence clé</div>
+                    <div class="item"><strong>Front Door :</strong> Plusieurs régions</div>
+                    <div class="item"><strong>App Gateway :</strong> Une seule région</div>
+                </div>
+
+                <!-- Surveillance Réseau -->
+                <div class="card orange">
+                    <div class="card-header orange">
+                        <span class="icon">👁️</span>
+                        <span class="card-title">Surveillance Réseau</span>
+                    </div>
+                    <div class="item"><span class="highlight">Azure Monitor</span> → Métriques & alertes</div>
+                    <div class="item"><span class="highlight">Network Watcher</span> → Diagnostic, logs réseau, activation/désactivation logs</div>
+                    <div class="item"><span class="highlight">Network Insights</span> → Vue intégrité & métriques</div>
+                </div>
+
+                <!-- Protection Applications -->
+                <div class="card purple">
+                    <div class="card-header purple">
+                        <span class="icon">🛡️</span>
+                        <span class="card-title">Protection Applications</span>
+                    </div>
+                    <div class="item"><span class="highlight">Azure Firewall</span> → Filtre trafic entrant/sortant VNet</div>
+                    <div class="item"><span class="highlight">DDoS Protection</span> → Protection contre attaques DDoS</div>
+                    <div class="item"><span class="highlight">WAF</span> → Pare-feu applications web</div>
+                    <div class="item"><span class="highlight">Private Link</span> → Connexion PaaS sans Internet</div>
+                    <div class="item"><span class="highlight">End Points</span> → Sécurise accès services critiques VNet vers Azure</div>
+                    <div class="item"><span class="highlight">NSG</span> → Groupes de sécurité réseau</div>
+                </div>
+
+                <!-- Stockage -->
+                <div class="card blue">
+                    <div class="card-header blue">
+                        <span class="icon">💾</span>
+                        <span class="card-title">Services Stockage</span>
+                    </div>
+                    <div class="section-title">📦 Types</div>
+                    <div class="item"><span class="highlight">Blob</span> → Données non structurées (texte, vidéo, audio, logs)</div>
+                    <div class="item"><span class="highlight">Azure Files</span> → Partage de fichiers SMB/NFS</div>
+                    <div class="item"><span class="highlight">Disk</span> → Disques pour VM</div>
+                    <div class="item"><span class="highlight">Queue</span> → Messages (64 ko max)</div>
+                    
+                    <div class="section-title">🔥 Niveaux d'accès Blob</div>
+                    <div class="item"><strong>Chaud :</strong> Accès fréquent</div>
+                    <div class="item"><strong>Froid :</strong> Accès rare (30+ jours)</div>
+                    <div class="item"><strong>Archive :</strong> Longue durée (180+ jours)</div>
+                    
+                    <div class="section-title">✅ Avantages Blob</div>
+                    <div class="item">Scalable • Accessible • Sécurisé • Haute disponibilité</div>
+                    
+                    <div class="section-title">💡 Cas d'usage</div>
+                    <div class="item"><strong>Blob :</strong> Sauvegarde/restauration, images web</div>
+                    <div class="item"><strong>Files :</strong> Remplacer serveur fichiers, conteneurisation</div>
+                    <div class="item"><strong>Queue :</strong> Alléger pression DB</div>
+                    <div class="item"><strong>Disk :</strong> Machines virtuelles</div>
+                    
+                    <div class="section-title">🔐 Sécurité Disk</div>
+                    <div class="item">Cryptage côté serveur • Azure Disk Encryption • Private Link</div>
+                </div>
+
+                <!-- IA, ML & IoT -->
+                <div class="card green">
+                    <div class="card-header green">
+                        <span class="icon">🧠</span>
+                        <span class="card-title">IA, ML & IoT</span>
+                    </div>
+                    <div class="section-title">🤖 Intelligence Artificielle (IA)</div>
+                    <div class="item">Algorithmes automatiques qui imitent l'intelligence humaine</div>
+                    <div class="item"><strong>Service :</strong> Azure Bot Service</div>
+                    
+                    <div class="section-title">📊 Machine Learning (ML)</div>
+                    <div class="item">Algorithmes mathématiques pour modèles prédictifs</div>
+                    <div class="item"><strong>Service :</strong> Azure ML, MMLSpark</div>
+                    
+                    <div class="section-title">📡 Internet des Objets (IoT)</div>
+                    <div class="item">Gérer et contrôler des capteurs/appareils</div>
+                    <div class="item"><strong>Services :</strong> IoT Hub, IoT Central, IoT Edge</div>
+                </div>
+
+                <!-- Support & Facturation -->
+                <div class="card orange">
+                    <div class="card-header orange">
+                        <span class="icon">💰</span>
+                        <span class="card-title">Support & Facturation</span>
+                    </div>
+                    <div class="section-title">🛠️ Types de Support</div>
+                    <div class="item"><span class="highlight">Basique</span> → Gratuit (forums, documentation)</div>
+                    <div class="item"><span class="highlight">Développeur</span> → Heures bureau (réponse 8h)</div>
+                    <div class="item"><span class="highlight">Standard</span> → 24/7 (réponse 1h)</div>
+                    <div class="item"><span class="highlight">Professionnel Direct</span> → 24/7 + support proactif</div>
+                    
+                    <div class="section-title">💵 Facturation</div>
+                    <div class="item">Paiement à l'usage (calcul, stockage, réseau)</div>
+                    <div class="item">Réservations 1-3 ans (réduction jusqu'à 70%)</div>
+                    
+                    <div class="section-title">📊 Outils</div>
+                    <div class="item"><strong>Calculateur Azure :</strong> Estimation coûts avant utilisation</div>
+                    <div class="item">Budgets & alertes de coût</div>
+                    <div class="item">Suivi via portail</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION Q&A -->
+        <div id="qa" class="content-section">
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Rechercher une question...">
+            
+            <div class="category-filter">
+                <button class="filter-btn active" onclick="filterCategory('all')">Tout</button>
+                <button class="filter-btn" onclick="filterCategory('livraison')">Livraison Apps</button>
+                <button class="filter-btn" onclick="filterCategory('protection')">Protection</button>
+                <button class="filter-btn" onclick="filterCategory('stockage')">Stockage</button>
+                <button class="filter-btn" onclick="filterCategory('calcul')">Calcul</button>
+                <button class="filter-btn" onclick="filterCategory('reseau')">Réseau</button>
+            </div>
+
+            <div class="qa-container" id="qaContainer">
+                <!-- Livraison d'applications -->
+                <div class="qa-item" data-category="livraison">
+                    <div class="question">
+                        <span class="question-number">Q1</span>
+                        <span>Quels sont les services de livraison d'application ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> CDN – Azure Front Door – Traffic Manager – Application Gateway
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="livraison">
+                    <div class="question">
+                        <span class="question-number">Q2</span>
+                        <span>Quel est le rôle du CDN ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un ensemble de serveurs (Edge) distribués géographiquement afin de distribuer rapidement le contenu web aux utilisateurs.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="livraison">
+                    <div class="question">
+                        <span class="question-number">Q3</span>
+                        <span>Quel est le rôle du Traffic Manager ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un équilibreur de charge de trafic DNS.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="livraison">
+                    <div class="question">
+                        <span class="question-number">Q4</span>
+                        <span>Quelle est la différence entre Azure Front Door et Application Gateway ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Azure Front Door est un service d'équilibrage de charge web au niveau de plusieurs régions, alors qu'Application Gateway est un service d'équilibrage de charge web au niveau d'une région.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q5</span>
+                        <span>Donner des exemples de surveillance réseaux ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Azure Monitor – Network Watcher – Azure Monitor Network Insights
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q6</span>
+                        <span>Quel est le rôle de Network Watcher ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Solution de diagnostic et de surveillance des performances réseau. Permet aussi d'activer et désactiver les fichiers journaux (logs).
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q7</span>
+                        <span>Quels sont les services de protection des applications d'Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Pare-feu Azure – Protection DDoS – Pare-feu d'application web – Azure Private Link – Points de terminaison (End Points)
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q8</span>
+                        <span>Quel est le rôle d'Azure Private Link ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service qui permet de se connecter sans aucune connexion Internet à un service PaaS qui n'est pas exposé à Internet.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q9</span>
+                        <span>Définir Azure DDoS ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service de protection contre les attaques DDoS.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q10</span>
+                        <span>Quel est le rôle d'Azure Pare-feu ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service de protection qui permet de filtrer le trafic entrant et sortant vers un VNet.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q11</span>
+                        <span>Quel est le rôle d'Azure Pare-feu d'application web ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un service de protection des applications web contre les attaques.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="protection">
+                    <div class="question">
+                        <span class="question-number">Q12</span>
+                        <span>Quel est le rôle du point de terminaison (End Points) ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service qui permet de sécuriser l'accès aux services critiques d'un réseau virtuel (VNet) vers un service Azure.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q13</span>
+                        <span>Quels sont les services de stockage Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Stockage Blob – Azure Files – Stockage sur disque – Stockage files d'attente
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q14</span>
+                        <span>Définir le stockage d'objets Blob ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Type de stockage pour stocker des données non structurées de grandes quantités (fichiers textes, binaires, vidéos, audio, fichiers log…)
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q15</span>
+                        <span>Quels sont les avantages de stockage Blob ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Scalable (évolutif) – Accessible – Sécurisé – Disponibilité – Stockage de grande quantité
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q16</span>
+                        <span>Donner un exemple d'utilisation de stockage Blob ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Stockage pour sauvegarde et restauration ou images diffusées sur sites web.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q17</span>
+                        <span>Donner les types d'accès au stockage Blob ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> HTTP – HTTPS – API – PowerShell – Azure CLI
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q18</span>
+                        <span>Donner les niveaux d'accès au stockage Blob ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Chaud – Froid – Archive
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q19</span>
+                        <span>Définir Azure Files ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service de stockage pour le partage de fichiers.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q20</span>
+                        <span>Donner cas d'utilisation Azure Files ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Compléter ou remplacer un serveur de fichiers local – Conteneurisation
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q21</span>
+                        <span>Définir Files d'attente Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service pour le stockage de messages (64 ko max).
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q22</span>
+                        <span>Donner cas d'utilisation Files d'attente Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Pour alléger la pression du trafic sur un serveur de base de données.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q23</span>
+                        <span>Donner cas d'utilisation du stockage sur Disque ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Machine virtuelle
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="stockage">
+                    <div class="question">
+                        <span class="question-number">Q24</span>
+                        <span>Donner 2 méthodes pour sécuriser Stockage sur Disque ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Cryptage côté serveur – Azure Disk Encryption – Azure Private Link
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q25</span>
+                        <span>Quels sont les types de services de calcul d'Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Azure Virtual Desktop – Conteneur Azure – Azure Function – Machine virtuelle – Azure App Service
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q26</span>
+                        <span>Quelle est la différence entre machine virtuelle et conteneur ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> La virtualisation est la distribution de plusieurs systèmes d'exploitation (SE) sur un seul serveur physique, par contre la conteneurisation est plus flexible et vise à découper le SE en différents blocs légers et rapides. Les VMs virtualisent toute la machine jusqu'à la couche matérielle tandis que le conteneur ne virtualise que les couches logicielles au-dessus du niveau SE.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q27</span>
+                        <span>Donner des exemples d'utilisation des conteneurs ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Machine Learning (Intelligence artificielle AI) – Batch – Application Cloud Native
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q28</span>
+                        <span>Quelles sont les avantages du conteneur ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Portabilité – Agilité – Évolutivité rapide
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q29</span>
+                        <span>Définir Azure Function ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Option de calcul Serverless (sans serveur) qui n'a pas besoin ni de VM ni de conteneur et qui se déclenche suite à un événement.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q30</span>
+                        <span>Donner 2 avantages de Azure Function ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Aucune gestion de l'infrastructure – Scalabilité dynamique – Time to market plus rapide
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q31</span>
+                        <span>Définir Azure App Service ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Est une option pour créer et héberger une application web, des APIs et application mobile sur Azure.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="calcul">
+                    <div class="question">
+                        <span class="question-number">Q32</span>
+                        <span>Quels sont les types d'Azure App Service ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Application web – API – Application mobile – WebJobs
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q33</span>
+                        <span>Quels sont les types de services de connectivité réseau ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> VNet (réseau virtuel) – Azure DNS – ExpressRoute – Passerelle VPN – WAN Virtuel – Azure Bastion
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q34</span>
+                        <span>Définir Azure Bastion ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un service PaaS qui permet de se connecter à une VM à l'aide d'une connexion RDP/SSH sécurisé.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q35</span>
+                        <span>Quel est le rôle d'Azure ExpressRoute ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un service qui permet de connecter un réseau local à Azure SANS avoir Internet.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="reseau">
+                    <div class="question">
+                        <span class="question-number">Q36</span>
+                        <span>Quel est le rôle de la passerelle VPN ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est un service qui permet d'avoir une connexion sécurisée à travers Internet entre réseau local et réseau virtuel (VNet) ou entre des réseaux VNets.
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="support">
+                    <div class="question">
+                        <span class="question-number">Q37</span>
+                        <span>Quels sont les types d'offres de soutien technique ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Basique – Standard – Développeur – Professionnel Direct
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="support">
+                    <div class="question">
+                        <span class="question-number">Q38</span>
+                        <span>Quel est l'outil utilisé pour estimer les coûts des services Azure avant de les utiliser ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Calculateur Azure – Tarification (Pricing)
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="ia">
+                    <div class="question">
+                        <span class="question-number">Q39</span>
+                        <span>Définir l'intelligence artificielle (IA) et donner le service Azure ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Technique automatique (algorithmes) qui permet d'imiter (simuler) l'intelligence humaine. <br><strong>Exemple :</strong> Azure Bot Service
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="ia">
+                    <div class="question">
+                        <span class="question-number">Q40</span>
+                        <span>Définir Machine Learning (ML) et donner un exemple de service ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> C'est une technique d'intelligence artificielle qui utilise des algorithmes mathématiques pour créer des modèles prédictifs. <br><strong>Exemple :</strong> Azure ML
+                    </div>
+                </div>
+
+                <div class="qa-item" data-category="ia">
+                    <div class="question">
+                        <span class="question-number">Q41</span>
+                        <span>Définir IoT et donner un exemple de service ?</span>
+                    </div>
+                    <div class="answer">
+                        <strong>Réponse :</strong> Service qui permet de gérer et contrôler des capteurs. <br><strong>Exemples :</strong> IoT Hub, IoT Central
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation entre sections
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(sectionId).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // Recherche dans les Q&A
+        document.getElementById('searchBox').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const qaItems = document.querySelectorAll('.qa-item');
+            
+            qaItems.forEach(item => {
+                const question = item.querySelector('.question').textContent.toLowerCase();
+                const answer = item.querySelector('.answer').textContent.toLowerCase();
+                
+                if (question.includes(searchTerm) || answer.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+
+        // Filtrage par catégorie
+        function filterCategory(category) {
+            const qaItems = document.querySelectorAll('.qa-item');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            
+            filterBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            qaItems.forEach(item => {
+                if (category === 'all' || item.dataset.category === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
